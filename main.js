@@ -4,8 +4,13 @@ function main() {
     const filePicker = document.querySelector("#filePicker");
     const button_encode = document.querySelector("#button_encode");
 
-    if (!filePicker || !button_encode) {
+    if (!filePicker || !button_encode || !log) {
         console.log("UI elements not found.");
+        return;
+    }
+
+    if (!window.hasOwnProperty("AudioEncoder")) {
+        log.innerText = "AudioEncoder not supported by your browser :(";
         return;
     }
 
@@ -62,17 +67,22 @@ function main() {
             bitrate: 192_000,
         });
 
+        encoder.addEventListener("dequeue", (event) => {
+            console.log(event);
+        });
+
         // 4. Feed AudioData to encoder in chunks
-        // Although AudioData can hold a lot, it's safer to feed it in reasonable time slices (e.g., 1 second)
-        // to avoid memory spikes or encoder errors.
-        const totalDuration = audioBuffer.duration;
         const chunkDuration = 1.0; // Process 1 second at a time
         const totalFrames = audioBuffer.length;
         const framesPerChunk = Math.floor(sampleRate * chunkDuration);
 
         for (let frameOffset = 0; frameOffset < totalFrames; frameOffset += framesPerChunk) {
             const currentFrames = Math.min(framesPerChunk, totalFrames - frameOffset);
-            
+        
+            let percent = ((frameOffset/totalFrames)*100.0).toFixed(2);
+            console.log(`${percent}%`);
+            log.innerText = percent;
+
             // create a planar buffer for this slice
             // f32-planar expects: [Channel 0 Data ...][Channel 1 Data ...]
             const planarData = new Float32Array(currentFrames * numberOfChannels);
@@ -95,9 +105,9 @@ function main() {
 
             encoder.encode(audioData);
             audioData.close(); // Important to release memory
-
-            console.log(`Encoded chunk ${frameOffset}`);
         }
+
+
 
         await encoder.flush();
         console.log("Encoding finished.");
