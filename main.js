@@ -68,7 +68,7 @@ function main() {
         };
 
 
-        let result = await encoder.isConfigSupported(config);
+        let result = await AudioEncoder.isConfigSupported(config);
 
         if (!result.supported) {
             console.log(result);
