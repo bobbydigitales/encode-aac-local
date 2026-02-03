@@ -60,12 +60,23 @@ function main() {
             },
         });
 
-        encoder.configure({
+        let config = {
             codec: 'mp4a.40.2', // AAC LC
             sampleRate: sampleRate,
             numberOfChannels: numberOfChannels,
             bitrate: 192_000,
-        });
+        };
+
+
+        let result = await encoder.isConfigSupported(config);
+
+        if (!result.supported) {
+            console.log(result);
+            log.innerText = "This browser can't encode to AAC";
+            return;
+        }
+
+        encoder.configure(config);
 
         encoder.addEventListener("dequeue", (event) => {
             console.log(event);
